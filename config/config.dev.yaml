@@ -1,0 +1,13 @@
+server:
+  appName: "WalletMaster6000"
+  port: "8080"
+  mode: "debug"
+  version: "1.0.0"
+
+database:
+  driver: "postgres"
+  dbname: "WM6000"
+  host: "wm6000-pg"
+  port: "5432"
+  username: "postgres"
+  password: "secur3passw0rd"

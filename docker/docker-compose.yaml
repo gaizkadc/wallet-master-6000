@@ -1,0 +1,21 @@
+version: '3.5'
+
+services:
+  wm6000:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: wm6000
+    volumes:
+      - ..:/app
+    ports:
+      - "8080:8080"
+  postgresql:
+    container_name: wm6000-pg
+    image: postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-WM6000}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secur3passw0rd}
+    ports:
+      - "5432:5432"
