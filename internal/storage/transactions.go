@@ -8,7 +8,7 @@ import (
 func GetTransactionsByCustomerId(customerId uuid.UUID) ([]models.Transaction, error) {
 	var transactions []models.Transaction
 
-	_, err := DB.Query(&transactions, "select * from transactions where from_customer = ?", customerId)
+	err := DB.Model(&transactions).Where("from_customer = ?", customerId).Select()
 	if err != nil {
 		return nil, err
 	}

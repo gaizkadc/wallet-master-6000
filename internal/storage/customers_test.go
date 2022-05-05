@@ -5,6 +5,7 @@ import (
 	"github.com/gaizkadc/wallet-master-6000/config"
 	"github.com/gaizkadc/wallet-master-6000/internal/storage"
 	"github.com/google/uuid"
+	"github.com/rs/zerolog/log"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -87,69 +88,88 @@ func TestCustomerExists(t *testing.T) {
 	}
 }
 
-//func TestCustomerExists(t *testing.T) {
-//	type args struct {
-//		id uuid.UUID
-//	}
-//	tests := []struct {
-//		name string
-//		args args
-//		want bool
-//	}{
-//		// TODO: Add test cases.
-//	}
-//	for _, tt := range tests {
-//		t.Run(tt.name, func(t *testing.T) {
-//			if got := storage.CustomerExists(tt.args.id); got != tt.want {
-//				t.Errorf("CustomerExists() = %v, want %v", got, tt.want)
-//			}
-//		})
-//	}
-//}
-//
-//func TestGetCustomerById(t *testing.T) {
-//	type args struct {
-//		id uuid.UUID
-//	}
-//	tests := []struct {
-//		name    string
-//		args    args
-//		want    *models.Customer
-//		wantErr bool
-//	}{
-//		// TODO: Add test cases.
-//	}
-//	for _, tt := range tests {
-//		t.Run(tt.name, func(t *testing.T) {
-//			got, err := storage.GetCustomerById(tt.args.id)
-//			if (err != nil) != tt.wantErr {
-//				t.Errorf("GetCustomerById() error = %v, wantErr %v", err, tt.wantErr)
-//				return
-//			}
-//			if !reflect.DeepEqual(got, tt.want) {
-//				t.Errorf("GetCustomerById() got = %v, want %v", got, tt.want)
-//			}
-//		})
-//	}
-//}
-//
-//func TestSubstractBalance(t *testing.T) {
-//	type args struct {
-//		id     uuid.UUID
-//		amount decimal.Decimal
-//	}
-//	tests := []struct {
-//		name    string
-//		args    args
-//		wantErr bool
-//	}{
-//		// TODO: Add test cases.
-//	}
-//	for _, tt := range tests {
-//		t.Run(tt.name, func(t *testing.T) {
-//			if err := storage.SubstractBalance(tt.args.id, tt.args.amount); (err != nil) != tt.wantErr {
-//				t.Errorf("SubstractBalance() error = %v, wantErr %v", err, tt.wantErr)
-//			}
-//		})
-//	}
-//}
+func TestGetCustomerById(t *testing.T) {
+	err := errors.New("error")
+	existingId, _ := uuid.Parse("273e4de9-a5ff-42c2-bdf2-54884c1d19cc")
+	tests := []struct {
+		name        string
+		id          uuid.UUID
+		expectedErr error
+	}{
+		{
+			name: "with an existing customer, then it should return that customer",
+			id:   existingId,
+		},
+		{
+			name:        "with a non-existing customer, then it should return an error",
+			id:          uuid.New(),
+			expectedErr: err,
+		},
+	}
+
+	config.Setup(testConfigPath)
+	storage.SetupDB()
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run("Given an GetCustomerById function, when called "+tt.name, func(t *testing.T) {
+			log.Debug().Interface("id", tt.id).Msg("id")
+			retrieved, err := storage.GetCustomerById(tt.id)
+			if err != nil {
+				require.NotNil(t, tt.expectedErr)
+			} else {
+				require.Equal(t, tt.id, retrieved.Id)
+			}
+		})
+	}
+}
+
+func TestSubtractBalance(t *testing.T) {
+	err := errors.New("error")
+	existingId, _ := uuid.Parse("273e4de9-a5ff-42c2-bdf2-54884c1d19cc")
+	validAmount := decimal.NewFromInt(5)
+	invalidAmount := decimal.NewFromInt(-5)
+	bigAmount := decimal.NewFromInt(100000)
+	tests := []struct {
+		name        string
+		id          uuid.UUID
+		amount      decimal.Decimal
+		expectedErr error
+	}{
+		{
+			name:   "with an existing customer and a valid amount, then it should not return any error",
+			id:     existingId,
+			amount: validAmount,
+		},
+		{
+			name:        "with an existing customer and an ivalid amount, then it should return an error",
+			id:          existingId,
+			amount:      invalidAmount,
+			expectedErr: err,
+		},
+		{
+			name:        "with an existing customer and a bigger amount than the customer's balance, then it should return an error",
+			id:          existingId,
+			amount:      bigAmount,
+			expectedErr: err,
+		},
+		{
+			name:        "with a non-existing customer, then it should return an error",
+			id:          uuid.New(),
+			amount:      validAmount,
+			expectedErr: err,
+		},
+	}
+
+	config.Setup(testConfigPath)
+	storage.SetupDB()
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run("Given an SubtractBalance function, when called "+tt.name, func(t *testing.T) {
+			t.Parallel()
+			err := storage.SubtractBalance(tt.id, tt.amount)
+			require.IsType(t, tt.expectedErr, err)
+		})
+	}
+}

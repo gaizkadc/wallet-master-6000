@@ -11,8 +11,9 @@ import (
 func GetCustomerById(id uuid.UUID) (*models.Customer, error) {
 	var customer models.Customer
 
-	_, err := DB.Query(&customer, "select * from customers where id = ?", id)
+	err := DB.Model(&customer).Where("id = ?", id).Select()
 	if err != nil {
+		log.Error().Err(err).Msg("error querying database")
 		return nil, err
 	}
 
@@ -22,7 +23,7 @@ func GetCustomerById(id uuid.UUID) (*models.Customer, error) {
 func CustomerExists(id uuid.UUID) bool {
 	var customer models.Customer
 
-	_, err := DB.Query(&customer, "select * from customers where id = ?", id)
+	err := DB.Model(&customer).Where("id = ?", id).Select()
 	if err != nil {
 		log.Error().Err(err).Msg("error querying database")
 		return false
@@ -60,7 +61,7 @@ func AddBalance(id uuid.UUID, amount decimal.Decimal) error {
 	return nil
 }
 
-func SubstractBalance(id uuid.UUID, amount decimal.Decimal) error {
+func SubtractBalance(id uuid.UUID, amount decimal.Decimal) error {
 	if !CustomerExists(id) {
 		return errors.New("customer doesn't exist")
 	}
@@ -68,6 +69,10 @@ func SubstractBalance(id uuid.UUID, amount decimal.Decimal) error {
 	customer, err := GetCustomerById(id)
 	if err != nil {
 		return err
+	}
+
+	if amount.LessThanOrEqual(decimal.Zero) {
+		return errors.New("invalid amount")
 	}
 
 	if customer.Balance.LessThan(amount) {

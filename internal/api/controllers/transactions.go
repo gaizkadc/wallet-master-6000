@@ -60,7 +60,7 @@ func AddTransaction(c *gin.Context) {
 		return
 	}
 
-	err = storage.SubstractBalance(input.FromCustomer, input.Amount)
+	err = storage.SubtractBalance(input.FromCustomer, input.Amount)
 	if err != nil {
 		errxrs.NewError(c, http.StatusBadRequest, err)
 		return
