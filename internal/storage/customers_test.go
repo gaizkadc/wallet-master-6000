@@ -30,7 +30,7 @@ func TestAddBalance(t *testing.T) {
 			amount: validAmount,
 		},
 		{
-			name:        "with an existing customer and an ivalid amount, then it should return an error",
+			name:        "with an existing customer and an invalid amount, then it should return an error",
 			id:          existingId,
 			amount:      invalidAmount,
 			expectedErr: err,
@@ -113,6 +113,7 @@ func TestGetCustomerById(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run("Given an GetCustomerById function, when called "+tt.name, func(t *testing.T) {
+			t.Parallel()
 			log.Debug().Interface("id", tt.id).Msg("id")
 			retrieved, err := storage.GetCustomerById(tt.id)
 			if err != nil {

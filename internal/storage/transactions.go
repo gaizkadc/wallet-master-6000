@@ -1,11 +1,16 @@
 package storage
 
 import (
+	"errors"
 	"github.com/gaizkadc/wallet-master-6000/internal/models"
 	"github.com/google/uuid"
 )
 
 func GetTransactionsByCustomerId(customerId uuid.UUID) ([]models.Transaction, error) {
+	if !CustomerExists(customerId) {
+		return nil, errors.New("customer doesn't exist")
+	}
+
 	var transactions []models.Transaction
 
 	err := DB.Model(&transactions).Where("from_customer = ?", customerId).Select()
